@@ -48,7 +48,7 @@ jobs:
           echo "HEAD: $(git rev-parse HEAD)"
           echo "triton-opt md5: $(md5sum $TRITON_OPT | cut -c1-12)"
           echo "--- the call arm in Membar.cpp ---"
-          grep -n 'triton::CallOp' lib/Analysis/Membar.cpp
+          grep -n 'CallOpInterface\|entryBlockInfo\|getCallSummary' lib/Analysis/Membar.cpp || true
 
       - name: Reproducer
         run: |
@@ -81,6 +81,9 @@ jobs:
           $TRITON_OPT /tmp/repro.mlir --allocate-shared-memory -test-print-membar \
             | sed -n '/caller_pending_read_then_call/,/tt.return/p' \
             | grep -c 'ttg.barrier' || true
+          echo "=== caller isolato ==="
+          $TRITON_OPT /tmp/repro.mlir --allocate-shared-memory -test-print-membar \
+            | sed -n '/caller_pending_read_then_call/,/^  }/p'
 
       - name: test-membar suite
         run: |
